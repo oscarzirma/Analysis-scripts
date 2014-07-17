@@ -1,0 +1,94 @@
+function v=locdatazero(d,I,u)
+%function that takes in a dataset of values in time (d) and an interval
+%vector of the format [start,end] and returns the indices where the
+%function crosses zero value which is locally determined between local minima and maxima.
+%u is 1 if the sample is going up at I(1) and 0 if going down.
+
+a=d(1);
+i=I(1)+10;
+m=0;
+k=1;
+while(i<=I(2))
+    if(m<2)
+        b=d(i);
+    if(u)
+       if(b>d(i-10:i+10)
+           max=i;
+            m=m+1;
+       end
+    end
+    else
+        if(b<d(i-10:i+10)
+            min=i;
+            m=m+2;
+        end
+    end
+    end
+    if(m==2)
+        z=(d(min)+d(max))/2;
+        a=d(min);
+        ts=0;
+        for((j<=max)&(ts==0))
+        if(d(j)>=z)
+            v(k)=j;
+            ts=-1;
+        end
+        j=j+8;
+        end
+        m=1;
+    end
+    if(m==3)
+        z=(d(min)+d(max))/2;
+        a=d(max);
+        ts=0;
+        for((j<=max)&(ts==0))
+        if(d(j)>=z)
+            v(k)=j;
+            ts=-1;
+        end
+        j=j+8;
+        end
+        m=1;
+    end  
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+a=d(I(1));
+k=1;
+if(a>z) s=1;
+else s=-1;
+end
+i=I(1);
+while(i<=I(2))
+    a=d(i);
+    if((s==1)&(a<=z))
+        v(k)=i;
+        s=-1;
+        k=k+1;
+        i=i+10;
+    end
+    if((s==-1)&(a>=z))
+        v(k)=i;
+        s=1;
+        k=k+1;
+        i=i+10;
+    end
+    i=i+1;
+end
+return
+        

@@ -1,0 +1,56 @@
+function [pupil,i] = pupilDetectFullAuto(image,starting_pos,thresh)
+%given an image, this will binarize it (55/255), bwareaopen(100), invert,
+%bwareaopen(100), bwlabel, then display to user, who will click on the
+%pupil, which will then be returned as a struct with centroid, area,
+%majorAxis, minorAxis, eccentricity, and orientation. i is the region ID
+%(to test whether it is identical across frames). If check_regionID is
+%true, it will display the frame and have the user click on the pupil to
+%indicate the regionID. Otherwise it will use the number provided by the
+%user.
+%auto version will assume that the relevant region is near the starting
+%position. if the starting_pos does not overlap a region, it will test one
+%to the left,up,right,down, then 2 to the left, right, up down, etc until a
+%region is found. recommend using previous centroid for the starting_pos
+%full auto uses roundest region if starting_pos is uniformative
+
+i=0;
+
+x=round(starting_pos(1));
+y=round(starting_pos(2));
+
+bw=im2bw(image,thresh/255);
+
+bwa=bwareaopen(bw,100);
+
+bwai=~bwa;
+
+bwaia=bwareaopen(bwai,100);
+
+l=bwlabel(bwaia);
+
+i=l(y,x);%which region is the pupil
+
+r=regionprops(l,'all');
+
+if i==0 %if the starting_pos was uninformative, select the least eccentric ('roundest') centroid
+    eccs = cat(1, r.Eccentricity);
+    [m i] = min(eccs);
+end
+
+rp=r(i);
+
+% if abs(rp.Centroid-starting_pos)>1
+%     imshow(l);
+%     title('Click on the pupil')
+%     [x,y]=ginput(1);
+%     l(round(y),round(x));
+%     rp=r(i);
+% end
+
+pupil.Centroid=rp.Centroid;
+pupil.Area=rp.Area;
+pupil.MajorAxis=rp.MajorAxisLength;
+pupil.MinorAxis=rp.MinorAxisLength;
+pupil.Eccentricity=rp.Eccentricity;
+pupil.Orientation=rp.Orientation;
+

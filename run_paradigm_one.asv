@@ -1,0 +1,231 @@
+%initialization script where parameters are defined and from which the behavioral
+%script is run.
+
+clear all
+clck=fix(clock);
+s=RandStream('mcg16807','Seed',clck(4)*clck(3));%seed random number generator with hour times the day of the month
+RandStream.setDefaultStream(s);
+%Initialization of all default values
+%%
+%%File parameters - file name includes the date, bird number, session number, and any notes. A folder will be produced for each date and each bird.
+test     = false; %true for a test run. will save to date folder.
+bird_num = '31';%bird ID
+session  = '1';%session number
+notes    = 'basic';%any relevant notes, e.g. stim parameters
+
+load_parameters = false; %if true, will load parameter file using uiload
+
+%%
+%%Visual stimulus parameters - parameters for stimuli presented in visual subtrials
+stim_radius        = 2; %stimulus radius in degrees
+stim_duration      = [50 200]; %stimulus duration in milliseconds (ms). if array, will sample all elements of array equally 
+stim_delay         = 100; %delay between initiation of subtrial and stimulus presentation in ms
+stim_contrast      = [1 .5 .1 .01]; %stimulus contrast. if array, will sample all elements of array equally 
+vis_trial_duration = 1000; %duration of a visual trial
+
+%%
+%%Response target parameters - parameters for stimuli presented in response subtrials
+targ_present          = true; %defines whether a visible target is presented on response subtrials NOT YET IMPLEMENTED
+targ_radius           = 2; %target radius in degrees
+targ_duration         = 100; %target duration in milliseconds (ms)
+targ_delay            = 100; %delay between initiation of subtrial and target presentation in ms
+targ_contrast         = .1; %target contrast
+reduce_contrast       = false; %if true, will reduce contrast by 1 unit on each response trial. will then reduce duration by 10 ms
+final_contrast        = 1; %final contrast. scale between 0 and 255
+final_duration        = 100; %final duration
+targ_permitted_radius = 15; %the radius in degrees of a peck considered to be on the target
+resp_trial_duration   = 1500; %duration of a response trial
+
+%%
+%%Fixation cross parameters
+fix_radius           = 4; %radius of fixation cross
+fix_permitted_radius = 15; %permitted distance for a peck to the fixation cross
+fix_X_offset         = 0; %offset of fixation cross from center of screen (in X)
+fix_Y_offset         = 100; %offset of fixation cross from center of screen (in Y)
+
+%%
+%%Trial parameters
+num_trials_per_stim = 400; %number of trials per stimulus position (response trials do not count toward this total)
+trial_duration      = 1500; %trial duration in ms
+auto_reward         = true; %enables automated reward
+prob_reward         = 1; %probability of a reward given a successful trial
+pointer_refresh     = 5; %period of pointer refresh in ms
+tracker_refresh     = 7; %period of head tracker refresh in ms
+
+num_visual_trials             = 2; %the number of visual trials preceding a response trial
+random_visual_trials          = false; %if true, the program will present a random number of visual trials before the response trial, the number varying between 1 and num_visual_trials
+identical_visual_trials       = false; %if true, all the visual trials preceding a response trial will have the same target location
+visual_trial_reward           = false; %if true, a reward is given on visual trials for pecking at the cross
+visual_trial_reward_num_pecks = 2; %the number of pecks to the cross required to initiate a reward
+visual_trial_prob_reward      = .04; %the probability of a reward on successful visual trial (peck on cross)
+visual_trial_fail_punish      = false; %if true, the screen will flash white and pause for 2 s if the bird pecks the target in a visual trial.
+visual_trial_fail_radius      = 4; %# of fix_permitted radii for the visual_trial_fail
+
+%%
+%Head tracking parameters
+tt_project    = 'ttj.ttp'; %tracking tools project file containing the relevant rigid body object
+head_tracking = true; %if true, head tracking will be enabled
+save_vid      = false; %NOT YET IMPLEMENTED if true, a grayscale image of the scene will be saved each iteration (this may slow the program, requiring a longer refresh period)
+
+limit_head_pos = false; %NOT YET IMPLEMENTED if true, a trial will only initiate if the bird's head is within a range of positions/orientation
+head_limit     = 'limits.mat'; %name of a file containing the head limits
+%%
+%Training conditions
+all_visual_trials   = false;
+all_response_trials = false;
+cross_as_target     = false;
+
+%% all color/shading related parameters
+fullblack = [0 0 0];
+fullwhite = [255 255 255];
+
+fixationCrossColor = fullwhite;% color of fixation cross/backg
+fixationCrossBackg = fullblack;
+startBackg         = fullblack;% color of backg when trial starts
+experimentBackg    = fullblack;% color of backg for experiment stimuli
+punishBackg        = fullwhite; %color of backg for punishment
+%%
+%Stimulus location parameters
+stimulation_type = 'sampling'; %determines the stimulation type. eligible values are 'quadrant', 'flash', 'sampling'
+flash_trials = 0; %the number of whole-screen flash trials to precede target presentation
+
+%Quadrant paramenters
+q_X_offset = 40; %x-offset from the cross location
+q_Y_offset = 40; %y-offset from the cross location
+
+%Sampling parameters
+X_values = [-50 0 50]; %x values to be sampled. 0 is center.
+Y_values = [-10 30]; %y values to be sampled. 0 is center.
+
+online_analysis = false; %switch to enable online behavioral analysis NOT YET IMPLEMENTED
+online_neural   = false; %switch to enable online neural analysis NOT YET IMPLEMENTED
+%%
+%Pixel to degree conversion
+
+pixels_per_cm            = 30/.95; %pixel density on screen
+eye_screen_distance      = 6.75; %distance between eye and screen when stimulus is presented
+DtoP                     = pixels_per_cm*eye_screen_distance;
+fix_radius               = tand(fix_radius)*DtoP;
+fix_permitted_radius     = tand(fix_permitted_radius)*DtoP;
+visual_trial_fail_radius = visual_trial_fail_radius * fix_permitted_radius;
+
+%%
+%Recording parameters
+
+record_EOG = false; %if true, record EOG from the RP2 index 1
+record_neural = false; %if true, record neural responses from Ch1, RA16 index 1
+
+recording_duration = 1000; %duration of recording, starting at the time of the peck.
+rp2_file  = '../rpx/ro_rp21_two_channel.rcx';
+ra16_file = '../rpx/ro_ra16_two_channel_v.rcx';
+
+record_video = false; %if true, records video starting from peck
+num_frames   = 10; %number of frames to record. frames are separated by 33 ms
+
+%%
+%run_paradigm_one_gui;%run GUI for user input of variables
+%close
+%%
+%Generate vector of stimulus coordinates
+if strcmp(stimulation_type,'quadrant')
+    X_values = [-q_X_offset q_X_offset];
+    Y_values = [-q_Y_offset q_Y_offset];
+end
+
+nx=length(X_values);
+ny=length(Y_values);
+
+x_stim_array=[];y_stim_array=[];%initiate stimuli vectors
+
+for i=1:ny
+    x_stim_array = [x_stim_array X_values];
+    y_stim_array = [y_stim_array ones(1,nx).*Y_values(i)];
+end
+
+num_positions = length(x_stim_array);
+
+stim_index = (1:num_positions);
+full_stim_index=[];
+
+for i=1:num_trials_per_stim
+    full_stim_index = [full_stim_index stim_index];
+end
+
+num_trials = num_trials_per_stim*num_positions;
+
+stimuli_positions=full_stim_index(randperm(num_trials));
+
+display([num2str(num_trials) ' trials total.']);
+
+%Generate visual trial contrasts and durations
+
+stim_contrast = repmat(stim_contrast,1,num_trials/length(stim_contrast));
+stim_duration = repmat(stim_duration,1,num_trials/length(stim_duration));
+
+stim_contrast = stim_contrast(randperm(num_trials));
+stim_duration = stim_contrast(randperm(num_trials));
+
+%%
+%Generate response trial indices
+max_stim=((num_visual_trials+1)/num_visual_trials)*length(stimuli_positions);
+response_trial_index=zeros(max_stim,1);
+if all_visual_trials
+    %if all visual trials, do nothing to the response_trial vector
+    %(keep it all zeros)
+elseif all_response_trials
+    response_trial_index = ones(max_stim,1);
+elseif random_visual_trials
+    i=1;j=1;
+    num_vis=randi(num_visual_trials-1,[max_stim,1]);
+    while j<max_stim
+       j=j+num_vis(i)+1;
+       response_trial_index(j)=1;
+       i=i+1;
+    end
+else
+    for i=1:max_stim
+        if ~mod(i,num_visual_trials+1)
+            response_trial_index(i)=1;
+        end
+    end
+end
+
+if load_parameters
+    uiload
+end
+
+%%
+%Save parameters
+date=datestr(date,29); %date string for directory and file name
+save_fname = ['Ch' bird_num '_D' date '_S' session '_' notes]; %file name containing bird ID, date, session, and notes
+
+if (test)
+    data_dir ='../Expt_Data/test/';
+    fname_params = [data_dir 'test_params'];
+    fname_data = [data_dir 'test'];
+     mkdir(data_dir);
+else
+    data_dir =['../Expt_Data/' date '/Ch' bird_num '/'];
+    mkdir(data_dir);
+    fname_params = [data_dir save_fname 'params'];
+    fname_data = [data_dir save_fname];
+    if exist([fname_params '.mat'], 'file') || exist([fname_data '.mat'], 'file'),
+        ovwr = input('Data and/or parameter file exists: overwrite(y/n)? ', 's');
+        if ovwr == 'n'
+            error('Terminating run to avoid overwriting files...')
+        end
+    end
+end
+
+save(fname_params)
+%%
+%Run the program
+
+if cross_as_target&&head_tracking
+    paradigm_one_TS_HT_crosstarg
+elseif cross_as_target
+    paradigm_one_TS_crosstarg
+else
+    paradigm_one_TS
+end
+

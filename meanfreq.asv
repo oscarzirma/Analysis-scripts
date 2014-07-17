@@ -1,0 +1,4 @@
+function [m,r,s]=meanfreq(P)
+%takes in peak data and returns the mean frequency, range of ferquencies
+%and standard deviation of frequencies
+

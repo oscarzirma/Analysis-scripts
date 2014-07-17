@@ -1,0 +1,11 @@
+function v=datazero(d,I)
+%function that takes in a dataset of values in time (d) and an interval
+%vector of the format [start,end] and returns the indices where the
+%function crosses zero
+
+a=d(I(1));
+if(a>0) s=1;
+else s=-1;
+end
+for(i=I(1):I(2))
+    

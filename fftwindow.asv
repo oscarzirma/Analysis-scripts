@@ -1,0 +1,3 @@
+function Z=fftwindow(d)
+%takes in data vector d and does the fourier transform over 500 data
+%points at a time

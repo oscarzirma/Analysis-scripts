@@ -1,0 +1,23 @@
+function display_dot(theWindow,theRect,color,azimuth,elevation,diameter,DtoP)
+%clears screen to black and displays a dot of the given color and
+%angular coordinates. color is rgb. flip screen to display dot.
+
+%displays stimulus
+
+width=theRect(3);centerx=width/2;
+height=theRect(4);centery=height/2;
+
+Screen('FillRect', theWindow, [0 0 0])
+
+distance = sqrt(azimuth^2+elevation^2);%distance of stimulus from (0,0)
+pix_diam = DtoP*(tand(distance+diameter/2) - tand(distance-diameter/2));
+
+x=centerx+tand(azimuth)*DtoP;
+y=centery+tand(elevation)*DtoP;
+
+Screen('FillOval', theWindow, color,[x-pix_diam y-pix_diam x+pix_diam y+pix_diam])
+
+
+
+
+
