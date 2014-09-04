@@ -457,9 +457,9 @@ box off
 lr_overall_signif
 
 %%
-bird = 81;
+bird = 63;
 set_form_detection_axes
-return
+
 %%
 %Save figures
 figure(f1)

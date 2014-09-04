@@ -3,7 +3,7 @@
 if bird == 63
     %overall prop corr
     figure(f1)
-    axis([.007 .4 .45 .8])
+    axis([.04 .6 .5 .7])
     
     %discrim location prop corr
     figure(f2)
@@ -67,9 +67,9 @@ elseif bird == 81
     %overall rxn times
     figure(f3);
     subplot(121)
-    axis([.007 .6 .295 .39])
-    subplot(121)
-    axis([.007 .6 .295 .39])
+    axis([.007 .6 .305 .41])
+    subplot(122)
+    axis([.007 .6 .305 .41])
     
     %discrim location rxn times
     figure(f4);
@@ -91,7 +91,7 @@ elseif bird == 81
      axis([.008 .6 .5 .8]) 
      
      figure(f8)
-     axis([0 .85 0 10])
+     axis([0 .95 0 10])
      
      figure(f9)
      axis([.008 .6 -10 4])
